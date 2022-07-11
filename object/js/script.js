@@ -4,7 +4,6 @@ class Bank {
   constructor() {
     this.clients = [];
   }
-  
   addClient(clientInformation) {
     let client = new Client(clientInformation);
     this.clients.push(client);
@@ -14,14 +13,14 @@ class Bank {
     let client = this.clients.find(client => client.identificationСode === identificationСode);
     return client;
   }
-  openAccount(identificationСode, information, balance, limit, personalFunds) {
+  openAccount(identificationСode, information) {
     let client = this.searchClient(identificationСode);
     let account;
-    if(limit === undefined) {
-      account = new DebitAccount(information, balance);
+    if(information.limit === undefined) {
+      account = new DebitAccount(information);
       client.debitAccounts.push(account);
     } else {
-      account = new CreditAccount(information,balance,limit,personalFunds);
+      account = new CreditAccount(information);
       client.creditAccounts.push(account);
     }
   }
@@ -68,21 +67,23 @@ class Bank {
       result.forEach(item => {
         rates.push(item);
       });
-      return rates
+      return rates;
     })
     .catch(error => console.error(error));
     return exchangeRate;
   }
-  async convertBalansOneCurrency(accounts, toCurrency, key = 'currencyType', balance = 'balance') {
+  async convertBalansOneCurrency(accounts, toCurrency) {
     let convertAccounts = [];
+    let currencyType = 'currencyType';
+    let balance = 'balance';
     for(let i = 0; i < accounts.length; i++) {
       let account = accounts[i];
-      if(account[key] !== toCurrency) {
+      if(account[currencyType] !== toCurrency) {
         await this.getСurrentExchangeRate()
         .then(result => {
-          let rate = result.find(item => item.base_ccy === account[key] && item.ccy === toCurrency);
+          let rate = result.find(item => item.base_ccy === account[currencyType] && item.ccy === toCurrency);
           account[balance] =  account[balance] / rate.sale;
-          account[key] = toCurrency;
+          account[currencyType] = toCurrency;
           convertAccounts.push(account);
         })
       } else {
@@ -91,11 +92,12 @@ class Bank {
     }
     return convertAccounts;
   }
-  sumBalance(accounts, key = 'balance') {
+  sumBalance(accounts) {
     let amount = 0;
+    let balance = 'balance';
     for(let i = 0; i < accounts.length; i++) {
       let account = accounts[i];
-      amount += account[key];
+      amount += account[balance];
     }
     return amount;
   }
@@ -121,7 +123,6 @@ class Bank {
     let sumBalance = this.sumBalance(convertCreditAccounts);
     return `Долг ${amountActive} активных Клиентов составляет ${-(sumBalance)} долларов`;
   }
-  
   async calcDebtDollarsNotActiveClients() {
     let notActiveClients = this.searchClients('active', item => item === false);
     let amountNotActive = notActiveClients.length;
@@ -142,47 +143,21 @@ class Client {
     this.creditAccounts = [];
   }
 }
-
-class Accounts {
-  constructor(information) {   
+class DebitAccount {
+  constructor(information) {
     this.activeAccount = information.activeAccount;
     this.cardExpiryDate = information.cardExpiryDate;
     this.currencyType = information.currencyType;
+    this.balance = information.balance || 0;
   }
 }
-
-class DebitAccount extends Accounts {
-  constructor(information, balance) {
-    super(information);
-    this.balance = balance || 0;
-  }
-}
-
-class CreditAccount extends Accounts {
-  constructor(information, personalFunds, limit, balance) {
-    super(information);
-    this.personalFunds = personalFunds;
-    this.limit = limit;
+class CreditAccount {
+  constructor(information) {
+    this.activeAccount = information.activeAccount;
+    this.cardExpiryDate = information.cardExpiryDate;
+    this.currencyType = information.currencyType;
+    this.personalFunds = information.personalFunds;
+    this.limit = information.limit;
     this.balance = this.personalFunds - this.limit;
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-    
-
-      
-
