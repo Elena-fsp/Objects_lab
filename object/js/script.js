@@ -102,8 +102,8 @@ class Bank {
     return amount;
   }
   async calcAllMoneyDollars() {
-    let debitAccounts = this.searchAccounts(this.clients, 'debitAccounts', 'balance', item => item > 0);
-    let creditAccounts = this.searchAccounts(this.clients, 'creditAccounts', 'balance', item => item > 0 || item < 0);
+    let debitAccounts = this.searchAccounts(this.clients, 'debitAccounts', 'balance', balance => balance > 0);
+    let creditAccounts = this.searchAccounts(this.clients, 'creditAccounts', 'balance', balance => balance > 0 || balance < 0);
     let convertDebitAccouts = await this.convertBalansOneCurrency(debitAccounts, "USD");
     let convertCreditAccounts = await this.convertBalansOneCurrency(creditAccounts, "USD");
     let sumDebetAccountsBalance = this.sumBalance(convertDebitAccouts);
@@ -111,22 +111,22 @@ class Bank {
     return sumDebetAccountsBalance + sumCreditAccountsBalance;
   }
   async calcAllDebtDollars() {
-    let creditAccounts = this.searchAccounts(this.clients, 'creditAccounts', 'balance', item => item < 0);
+    let creditAccounts = this.searchAccounts(this.clients, 'creditAccounts', 'balance', balance => balance < 0);
     let convertCreditAccounts = await this.convertBalansOneCurrency(creditAccounts, "USD");
     return this.sumBalance(convertCreditAccounts);
   }
   async calcDebtDollarsActiveClients() {
-    let activeClients = this.searchClients('active', item => item === true);
+    let activeClients = this.searchClients('active', active => active);
     let amountActive = activeClients.length;
-    let creditAccounts = this.searchAccounts(activeClients, 'creditAccounts', 'balance', item => item < 0);
+    let creditAccounts = this.searchAccounts(activeClients, 'creditAccounts', 'balance', balance => balance < 0);
     let convertCreditAccounts = await this.convertBalansOneCurrency(creditAccounts, "USD");
     let sumBalance = this.sumBalance(convertCreditAccounts);
     return `Долг ${amountActive} активных Клиентов составляет ${-(sumBalance)} долларов`;
   }
   async calcDebtDollarsNotActiveClients() {
-    let notActiveClients = this.searchClients('active', item => item === false);
+    let notActiveClients = this.searchClients('active', active => active === false);
     let amountNotActive = notActiveClients.length;
-    let creditAccounts = this.searchAccounts(notActiveClients, 'creditAccounts', 'balance', item => item < 0);
+    let creditAccounts = this.searchAccounts(notActiveClients, 'creditAccounts', 'balance', balance => balance < 0);
     let convertCreditAccounts = await this.convertBalansOneCurrency(creditAccounts, "USD");
     let sumBalance = this.sumBalance(convertCreditAccounts);
     return `Долг ${amountNotActive} неактивных Клиентов составляет ${-(sumBalance)} долларов`;
